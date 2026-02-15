@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Resume Builder — Build Track</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="design-system.css">
+</head>
+<body>
+  <div class="layout-container">
+    <!-- TOP BAR -->
+    <header class="top-bar">
+      <div class="top-bar__project">AI Resume Builder</div>
+      <div class="top-bar__progress" id="step-indicator">Project 3 — Step 1 of 8</div>
+      <div class="top-bar__status status--not-started" id="status-badge">Not Started</div>
+    </header>
+
+    <!-- CONTEXT HEADER -->
+    <section class="context-header">
+      <h1 class="context-header__title" id="page-title">Problem Statement</h1>
+      <p class="context-header__subtitle" id="page-subtitle">Define the core problem your AI Resume Builder solves.</p>
+    </section>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <!-- PRIMARY WORKSPACE (70%) -->
+      <div class="primary-workspace">
+        <!-- Content injected by JS -->
+        <div id="step-content"></div>
+      </div>
+
+      <!-- SECONDARY BUILD PANEL (30%) -->
+      <aside class="secondary-panel">
+        <h3 class="secondary-panel__title">Build Actions</h3>
+        
+        <p class="text-small text-muted mb-sm">1. Copy this prompt:</p>
+        <div class="prompt-box">
+          <div class="prompt-box__content" id="prompt-content">Initialize the project...</div>
+        </div>
+        <button class="btn btn-secondary btn-small btn-block mb-md" id="copy-btn">Copy to Clipboard</button>
+        
+        <p class="text-small text-muted mb-sm">2. Build in Lovable, then paste artifact below:</p>
+        <textarea class="input mb-sm" id="artifact-input" rows="4" placeholder="Paste your code or artifact URL here..."></textarea>
+        
+        <div class="btn-group">
+          <button class="btn btn-secondary btn-small btn-block" id="open-lovable">Build in Lovable ↗</button>
+        </div>
+
+        <div class="mt-md">
+            <p class="text-small text-muted">Status:</p>
+            <div id="validation-status" class="text-small" style="font-weight: 500; color: #666;">Waiting for input...</div>
+        </div>
+
+        <div class="mt-lg pt-md" style="border-top: 1px solid var(--color-border);">
+            <button class="btn btn-primary btn-block" id="next-btn" disabled>Next Step →</button>
+        </div>
+      </aside>
+    </main>
+
+    <!-- PROOF FOOTER -->
+    <footer class="proof-footer">
+      <div class="proof-footer__title">Build Progress</div>
+      <div class="proof-checklist" id="proof-checklist">
+        <!-- Checklist items injected by JS -->
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // --- STATE MANAGEMENT ---
+    const ROUTES = [
+      { id: '01-problem', step: 1, title: 'Problem Statement', subtitle: 'Define the core problem your AI Resume Builder solves.', prompt: 'Create a problem statement for an AI Resume Builder that helps users optimize their resumes for ATS.' },
+      { id: '02-market', step: 2, title: 'Market Analysis', subtitle: 'Analyze the target audience and competitors.', prompt: 'Perform a market analysis for the AI Resume Builder. Identify key competitors and user personas.' },
+      { id: '03-architecture', step: 3, title: 'Architecture', subtitle: 'Define the technical architecture.', prompt: 'Outline the technical architecture for the AI Resume Builder, including frontend, backend, and AI service integration.' },
+      { id: '04-hld', step: 4, title: 'High Level Design', subtitle: 'Create the High Level Design (HLD).', prompt: 'Generate a High Level Design (HLD) diagram description for the system.' },
+      { id: '05-lld', step: 5, title: 'Low Level Design', subtitle: 'Create the Low Level Design (LLD).', prompt: 'Generate a Low Level Design (LLD) class diagram and API specification.' },
+      { id: '06-build', step: 6, title: 'Build Phase', subtitle: 'Implement the core features.', prompt: 'Generate the core generic code structure for the AI Resume Builder application.' },
+      { id: '07-test', step: 7, title: 'Testing', subtitle: 'Verify the application functionality.', prompt: 'Create a test plan and test cases for the AI Resume Builder.' },
+      { id: '08-ship', step: 8, title: 'Shipping', subtitle: 'Prepare for deployment.', prompt: 'Generate a deployment checklist and release notes for the first version.' },
+      { id: 'proof', step: 9, title: 'Proof of Work', subtitle: 'Submit your final proof of work.', prompt: '' }
+    ];
+
+    const STORAGE_KEY = 'rb_artifacts';
+
+    // --- DOM ELEMENTS ---
+    const els = {
+      stepIndicator: document.getElementById('step-indicator'),
+      statusBadge: document.getElementById('status-badge'),
+      pageTitle: document.getElementById('page-title'),
+      pageSubtitle: document.getElementById('page-subtitle'),
+      stepContent: document.getElementById('step-content'),
+      promptContent: document.getElementById('prompt-content'),
+      copyBtn: document.getElementById('copy-btn'),
+      artifactInput: document.getElementById('artifact-input'),
+      nextBtn: document.getElementById('next-btn'),
+      openLovable: document.getElementById('open-lovable'),
+      validationStatus: document.getElementById('validation-status'),
+      proofChecklist: document.getElementById('proof-checklist'),
+      secondaryPanel: document.querySelector('.secondary-panel')
+    };
+
+    // --- UTILS ---
+    function getArtifacts() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    }
+
+    function saveArtifact(stepId, content) {
+      const artifacts = getArtifacts();
+      artifacts[stepId] = content;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(artifacts));
+      updateStatus();
+    }
+
+    function getRouteId() {
+      const hash = window.location.hash.replace('#/rb/', '');
+      return hash || '01-problem';
+    }
+
+    function updateStatus() {
+      const artifacts = getArtifacts();
+      const count = Object.keys(artifacts).length;
+      if (count === 0) {
+        els.statusBadge.textContent = 'Not Started';
+        els.statusBadge.className = 'top-bar__status status--not-started';
+      } else if (count < 8) {
+        els.statusBadge.textContent = 'In Progress';
+        els.statusBadge.className = 'top-bar__status status--in-progress';
+      } else {
+        els.statusBadge.textContent = 'Shipped';
+        els.statusBadge.className = 'top-bar__status status--shipped';
+      }
+      renderChecklist();
+    }
+
+    // --- RENDERING ---
+    function renderChecklist() {
+      const artifacts = getArtifacts();
+      els.proofChecklist.innerHTML = ROUTES.slice(0, 8).map(route => `
+        <label class="proof-checklist__item">
+          <input type="checkbox" class="proof-checklist__checkbox" ${artifacts[route.id] ? 'checked' : ''} disabled>
+          <span>Step ${route.step}</span>
+        </label>
+      `).join('');
+    }
+
+    function renderPage() {
+      const routeId = getRouteId();
+      const route = ROUTES.find(r => r.id === routeId) || ROUTES[0];
+
+      // Update Header
+      els.pageTitle.textContent = route.title;
+      els.pageSubtitle.textContent = route.subtitle;
+
+      if (route.id === 'proof') {
+        renderProofPage();
+        return;
+      }
+
+      // Normal Steps
+      els.secondaryPanel.style.display = 'block';
+      els.stepIndicator.textContent = `Project 3 — Step ${route.step} of 8`;
+      
+      els.promptContent.textContent = route.prompt;
+      
+      // Input Logic
+      const artifacts = getArtifacts();
+      els.artifactInput.value = artifacts[route.id] || '';
+      validateInput(); // Check if next should be enabled
+
+      // Inject Content Placeholder
+      els.stepContent.innerHTML = `
+        <div class="card">
+          <h2 class="card__title">Current Task</h2>
+          <div class="card__content">
+            <p>Follow the instructions in the Build Panel to complete this step.</p>
+            <div class="empty-state">
+              <div class="empty-state__title">Waiting for Artifact</div>
+              <div class="empty-state__message">Build this step in Lovable and paste the result to proceed.</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderProofPage() {
+      els.stepIndicator.textContent = `Project 3 — Final Submission`;
+      els.secondaryPanel.style.display = 'none';
+      
+      const artifacts = getArtifacts();
+      const allDone = ROUTES.slice(0, 8).every(r => !!artifacts[r.id]);
+      
+      els.stepContent.innerHTML = `
+        <div class="card">
+          <h2 class="card__title">Final Submission</h2>
+          <div class="card__content">
+            <p>Congratulations on completing the build track! Please provide your project links below.</p>
+            
+            <div class="input-group">
+              <label class="input-label">Lovable Project Link</label>
+              <input type="text" class="input" id="lovable-link" placeholder="https://lovable.dev/..." value="${artifacts['lovable_link'] || ''}">
+            </div>
+            
+            <div class="input-group">
+              <label class="input-label">GitHub Repository Link</label>
+              <input type="text" class="input" id="github-link" placeholder="https://github.com/..." value="${artifacts['github_link'] || ''}">
+            </div>
+            
+            <div class="input-group">
+              <label class="input-label">Deployed Application URL</label>
+              <input type="text" class="input" id="deploy-link" placeholder="https://..." value="${artifacts['deploy_link'] || ''}">
+            </div>
+
+            <button class="btn btn-primary" id="final-submit-btn" ${!allDone ? 'disabled' : ''}>Copy Final Submission</button>
+            
+            ${!allDone ? '<p class="text-small text-muted mt-md">Complete all previous steps to enable submission.</p>' : ''}
+          </div>
+        </div>
+      `;
+
+      // Event listeners for proof page are attached here because content is dynamic
+      document.getElementById('lovable-link')?.addEventListener('input', (e) => saveArtifact('lovable_link', e.target.value));
+      document.getElementById('github-link')?.addEventListener('input', (e) => saveArtifact('github_link', e.target.value));
+      document.getElementById('deploy-link')?.addEventListener('input', (e) => saveArtifact('deploy_link', e.target.value));
+      
+      document.getElementById('final-submit-btn')?.addEventListener('click', () => {
+        const data = getArtifacts();
+        const text = `Project 3 Submission\n\nLovable: ${data.lovable_link}\nGitHub: ${data.github_link}\nDeploy: ${data.deploy_link}\n\nStatus: Shipped`;
+        navigator.clipboard.writeText(text);
+        alert('Submission copied to clipboard!');
+      });
+    }
+
+    // --- EVENT LISTENERS ---
+    
+    // Routing
+    window.addEventListener('hashchange', renderPage);
+    
+    // Copy Button
+    els.copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(els.promptContent.textContent);
+      els.copyBtn.textContent = 'Copied!';
+      setTimeout(() => els.copyBtn.textContent = 'Copy to Clipboard', 2000);
+    });
+
+    // Lovable Link
+    els.openLovable.addEventListener('click', () => {
+      window.open('https://lovable.dev', '_blank');
+    });
+
+    // Input Validation & Navigation
+    els.artifactInput.addEventListener('input', validateInput);
+
+    function validateInput() {
+      const content = els.artifactInput.value.trim();
+      const routeId = getRouteId();
+      
+      saveArtifact(routeId, content);
+
+      if (content.length > 0) {
+        els.nextBtn.disabled = false;
+        els.validationStatus.textContent = 'Artifact captured. Ready to proceed.';
+        els.validationStatus.style.color = 'var(--color-success)';
+      } else {
+        els.nextBtn.disabled = true;
+        els.validationStatus.textContent = 'Waiting for input...';
+        els.validationStatus.style.color = '#666';
+      }
+    }
+
+    // Next Button
+    els.nextBtn.addEventListener('click', () => {
+      const routeId = getRouteId();
+      const currentIndex = ROUTES.findIndex(r => r.id === routeId);
+      if (currentIndex < ROUTES.length - 1) {
+        window.location.hash = `/rb/${ROUTES[currentIndex + 1].id}`;
+      }
+    });
+
+    // Initialize
+    updateStatus();
+    renderChecklist();
+    if (!window.location.hash) {
+      window.location.hash = '#/rb/01-problem';
+    } else {
+      renderPage();
+    }
+
+  </script>
+</body>
+</html>
