@@ -1,3 +1,5 @@
+// APP.JS - FINAL VERSION WITH AUTOSAVE AND SCORING
+
 // STATE
 const state = {
     resume: {
@@ -41,6 +43,23 @@ const sampleData = {
     skills: 'JavaScript, TypeScript, React, Node.js, Python, AWS, Docker'
 };
 
+// PERSISTENCE
+function saveData() {
+    localStorage.setItem('resumeBuilderData', JSON.stringify(state.resume));
+    updateScoreUI();
+}
+
+function loadData() {
+    const saved = localStorage.getItem('resumeBuilderData');
+    if (saved) {
+        state.resume = JSON.parse(saved);
+        // Ensure arrays exist if loading from old data
+        if (!state.resume.education) state.resume.education = [];
+        if (!state.resume.experience) state.resume.experience = [];
+        if (!state.resume.projects) state.resume.projects = [];
+    }
+}
+
 // ROUTER & RENDERING
 const app = document.getElementById('app-content');
 
@@ -81,6 +100,10 @@ function renderBuilder() {
         <div class="builder-layout">
             <!-- LEFT: FORM -->
             <div class="builder-form">
+                
+                <!-- SCORE CARD -->
+                <div id="score-card-container"></div>
+
                 <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                         <h2 class="card__title" style="margin: 0;">Resume Details</h2>
@@ -215,6 +238,7 @@ function renderBuilder() {
             </div>
         </div>
     `;
+    updateScoreUI();
 }
 
 function renderPreviewRoute() {
@@ -239,6 +263,98 @@ function renderProof() {
         </div>
     `;
 }
+
+// SCORING LOGIC
+function calculateScore() {
+    let score = 0;
+    const suggestions = [];
+    const r = state.resume;
+
+    // 1. Summary Length (40-120 words)
+    const summaryWords = r.summary.trim().split(/\s+/).filter(w => w.length > 0).length;
+    if (summaryWords >= 40 && summaryWords <= 120) {
+        score += 15;
+    } else {
+        suggestions.push("Write a stronger summary (40–120 words).");
+    }
+
+    // 2. Projects >= 2
+    if (r.projects.length >= 2) {
+        score += 10;
+    } else {
+        suggestions.push("Add at least 2 projects.");
+    }
+
+    // 3. Experience >= 1
+    if (r.experience.length >= 1) {
+        score += 10;
+    } else {
+        suggestions.push("Add at least 1 work experience.");
+    }
+
+    // 4. Skills >= 8
+    const skillList = r.skills.split(',').filter(s => s.trim().length > 0);
+    if (skillList.length >= 8) {
+        score += 10;
+    } else {
+        suggestions.push("Add more skills (target 8+).");
+    }
+
+    // 5. GitHub or LinkedIn
+    if (r.personal.github || r.personal.linkedin) {
+        score += 10;
+    } else {
+        suggestions.push("Add GitHub or LinkedIn link.");
+    }
+
+    // 6. Quantifiable Results
+    const allText = [...r.experience.map(e => e.description), ...r.projects.map(p => p.description)].join(' ');
+    const hasNumbers = /\d+%|\d+x|\d+k/i.test(allText);
+    if (hasNumbers) {
+        score += 15;
+    } else {
+        suggestions.push("Add measurable impact (numbers/%) in bullets.");
+    }
+
+    // 7. Education Completeness
+    const eduComplete = r.education.length > 0 && r.education.every(e => e.institution && e.degree && e.year);
+    if (eduComplete) {
+        score += 10;
+    } else if (r.education.length === 0) {
+        suggestions.push("Add your education details.");
+    }
+
+    // 8. Layout/Base (Implied +20 to reach 100, wait: 15+10+10+10+10+15+10 = 80. +20 Layout = 100)
+    score += 20;
+
+    return { score: Math.min(score, 100), suggestions: suggestions.slice(0, 3) };
+}
+
+function updateScoreUI() {
+    const container = document.getElementById('score-card-container');
+    if (!container) return;
+
+    const { score, suggestions } = calculateScore();
+    let scoreClass = 'low';
+    if (score >= 80) scoreClass = 'good';
+    else if (score >= 50) scoreClass = 'mid';
+
+    container.innerHTML = `
+        <div class="score-card">
+            <div class="score-header">
+                <span class="score-title">ATS Readiness Score</span>
+                <span class="score-value">${score}/100</span>
+            </div>
+            <div class="score-meter">
+                <div class="score-fill ${scoreClass}" style="width: ${score}%"></div>
+            </div>
+            <ul class="suggestion-list">
+                ${suggestions.map(s => `<li class="suggestion-item">${s}</li>`).join('')}
+            </ul>
+        </div>
+    `;
+}
+
 
 // HELPERS
 function getResumeHTML() {
@@ -302,47 +418,56 @@ function getResumeHTML() {
 // ACTIONS
 window.loadSampleData = function () {
     state.resume = JSON.parse(JSON.stringify(sampleData));
+    saveData();
     render();
 };
 
 window.updatePersonal = function (field, value) {
     state.resume.personal[field] = value;
+    saveData();
     refreshPreview();
 };
 
 window.updateSummary = function (value) {
     state.resume.summary = value;
+    saveData();
     refreshPreview();
 };
 
 window.updateSkills = function (value) {
     state.resume.skills = value;
+    saveData();
     refreshPreview();
 };
 
 // ARRAY ACTIONS
 window.addEducation = function () {
     state.resume.education.push({ institution: '', degree: '', year: '' });
-    render(); // Re-render form to show new input
+    saveData();
+    render();
 };
 
 window.addExperience = function () {
     state.resume.experience.push({ company: '', role: '', duration: '', description: '' });
+    saveData();
     render();
 };
 
 window.addProject = function () {
     state.resume.projects.push({ name: '', link: '', description: '' });
+    saveData();
     render();
 };
 
 window.removeArrayItem = function (key, index) {
     state.resume[key].splice(index, 1);
+    saveData();
     render();
 };
 
 window.updateArrayItem = function (key, index, field, value) {
     state.resume[key][index][field] = value;
+    saveData();
     refreshPreview();
 };
 
@@ -351,8 +476,10 @@ function refreshPreview() {
     if (previewContainer) {
         previewContainer.innerHTML = getResumeHTML();
     }
+    updateScoreUI();
 }
 
 // INIT
 window.addEventListener('hashchange', render);
+loadData();
 render();
