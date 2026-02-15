@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Builder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="../design-system.css">
+    <style>
+        /* Specific App overrides/additions */
+        /* Resume Preview Styles */
+        .resume-preview {
+            background: white;
+            padding: 40px;
+            min-height: 800px;
+            /* A4-ish ratio */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            font-family: 'Crimson Pro', serif;
+            color: #000;
+        }
+
+        .resume-preview h1 {
+            font-size: 32px;
+            margin-bottom: 4px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 8px;
+        }
+
+        .resume-preview h2 {
+            font-size: 18px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #ccc;
+            margin-top: 24px;
+            margin-bottom: 12px;
+            padding-bottom: 4px;
+            letter-spacing: 0.05em;
+        }
+
+        .resume-preview h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .resume-preview p,
+        .resume-preview li {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 4px;
+        }
+
+        .resume-contact-info {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        /* Builder Layout */
+        .builder-layout {
+            display: flex;
+            gap: 24px;
+            height: calc(100vh - 80px);
+            /* Subtract top bar */
+            overflow: hidden;
+        }
+
+        .builder-form {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 16px;
+        }
+
+        .builder-preview {
+            flex: 1;
+            overflow-y: auto;
+            background: #e5e5e5;
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .preview-container {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        /* Clean Link in Nav */
+        .nav-link {
+            text-decoration: none;
+            color: var(--color-text-primary);
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .nav-link.active {
+            background-color: var(--color-accent);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout-container">
+        <!-- TOP BAR -->
+        <header class="top-bar">
+            <div class="top-bar__project">
+                <strong>AI Resume Builder</strong>
+            </div>
+            <nav class="btn-group">
+                <a href="#/builder" class="nav-link" id="nav-builder">Builder</a>
+                <a href="#/preview" class="nav-link" id="nav-preview">Preview</a>
+                <a href="#/proof" class="nav-link" id="nav-proof">Proof</a>
+            </nav>
+        </header>
+
+        <!-- Dynamic Content -->
+        <main id="app-content"></main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
