@@ -129,7 +129,7 @@ function renderHome() {
     app.innerHTML = `
         <div class="empty-state" style="margin-top: 100px;">
             <h1 style="font-size: 48px; margin-bottom: 24px; font-family: var(--font-serif);">Build a Resume That Gets Read.</h1>
-            <p class="text-large text-muted mb-lg">Professional, clean, and ATS-optimized. No distractions.</p>
+            <p class="text-large text-muted mb-lg">Professional, clean, and ATS-optimized. No distractions. <span style="font-size: 12px; color: #999; border: 1px solid #eee; padding: 2px 6px; border-radius: 4px;">v2.0</span></p>
             <a href="#/builder" class="btn btn-primary" style="padding: 16px 32px; font-size: 18px;">Start Building</a>
         </div>
     `;
@@ -297,18 +297,75 @@ function renderBuilder() {
 function renderPreviewRoute() {
     app.innerHTML = `
         <div style="max-width: 800px; margin: 40px auto;">
-            <div class="template-switcher" style="margin-bottom: 40px;">
+            <div class="template-switcher" style="margin-bottom: 24px;">
                 <button class="template-btn ${state.template === 'classic' ? 'active' : ''}" onclick="setTemplate('classic')">Classic</button>
                 <button class="template-btn ${state.template === 'modern' ? 'active' : ''}" onclick="setTemplate('modern')">Modern</button>
                 <button class="template-btn ${state.template === 'minimal' ? 'active' : ''}" onclick="setTemplate('minimal')">Minimal</button>
             </div>
-            ${getResumeHTML()}
-            <div class="text-center mt-lg">
-                <button class="btn btn-primary" onclick="window.print()">Print / Save PDF</button>
+
+            <!-- Export Options -->
+            <div class="card" style="margin-bottom: 32px; padding: 20px; display: flex; gap: 16px; align-items: center; justify-content: space-between; background: #fff;">
+                <div>
+                    <h3 style="margin: 0 0 4px 0;">Export Your Resume</h3>
+                    <p style="margin: 0; font-size: 14px; color: #666;">Save as PDF or copy text.</p>
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-secondary" onclick="copyResumeToClipboard()">Copy Text</button>
+                    <button class="btn btn-primary" onclick="validateAndPrint()">Print / Save PDF</button>
+                </div>
             </div>
+
+            ${getResumeHTML()}
         </div>
     `;
 }
+
+// EXPORT ACTIONS
+window.validateAndPrint = function () {
+    // Validation
+    const errors = [];
+    if (!state.resume.personal.name) errors.push("Missing Name");
+    if (state.resume.experience.length === 0 && state.resume.projects.length === 0) errors.push("No Experience or Projects");
+
+    if (errors.length > 0) {
+        const proceed = confirm(`Your resume looks incomplete (${errors.join(', ')}). \n\nDo you still want to export?`);
+        if (!proceed) return;
+    }
+
+    window.print();
+};
+
+window.copyResumeToClipboard = function () {
+    const r = state.resume;
+    const text = [
+        r.personal.name.toUpperCase(),
+        [r.personal.email, r.personal.phone, r.personal.location, r.personal.linkedin, r.personal.github].filter(Boolean).join(' | '),
+        '',
+        'PROFESSIONAL SUMMARY',
+        r.summary,
+        '',
+        'EXPERIENCE',
+        ...r.experience.map(e => `${e.company} - ${e.role} (${e.duration})\n${e.description}`),
+        '',
+        'PROJECTS',
+        ...r.projects.map(p => `${p.name} (${p.link})\n${p.description}`),
+        '',
+        'EDUCATION',
+        ...r.education.map(e => `${e.institution} - ${e.degree} (${e.year})`),
+        '',
+        'SKILLS',
+        r.skills
+    ].join('\n');
+
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.querySelector('button[onclick="copyResumeToClipboard()"]');
+        if (btn) {
+            const originalText = btn.innerText;
+            btn.innerText = "Copied!";
+            setTimeout(() => btn.innerText = originalText, 2000);
+        }
+    });
+};
 
 function renderProof() {
     app.innerHTML = `

@@ -370,6 +370,65 @@
             background-color: var(--color-accent);
             color: white;
         }
+
+        /* PRINT STYLES */
+        @media print {
+
+            /* Hide UI Elements */
+            .top-bar,
+            .btn,
+            .template-switcher,
+            .text-center,
+            .input-guidance,
+            #score-card-container {
+                display: none !important;
+            }
+
+            /* Reset Layout */
+            body,
+            .layout-container,
+            #app-content {
+                display: block;
+                height: auto;
+                overflow: visible;
+                background: white;
+            }
+
+            .resume-preview {
+                width: 100%;
+                max-width: 100%;
+                box-shadow: none;
+                border: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            /* Page Breaks */
+            h1,
+            h2,
+            h3 {
+                break-after: avoid;
+                page-break-after: avoid;
+            }
+
+            .section-content,
+            li {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            /* Typography Overrides for Print */
+            body {
+                color: black;
+                font-size: 12pt;
+                /* Standard print size */
+            }
+
+            a {
+                text-decoration: none;
+                color: black;
+            }
+        }
     </style>
 </head>
 
@@ -391,7 +450,7 @@
         <main id="app-content"></main>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=2"></script>
 </body>
 
 </html>
