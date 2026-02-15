@@ -173,6 +173,190 @@
             font-weight: bold;
         }
 
+        /* Input Guidance */
+        .input-guidance {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .input-guidance.warning {
+            color: #d97706;
+        }
+
+        /* Template Switcher */
+        .template-switcher {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: #f3f3f3;
+            padding: 4px;
+            border-radius: 6px;
+        }
+
+        .template-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.2s;
+        }
+
+        .template-btn.active {
+            background: white;
+            color: var(--color-text-primary);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* TEMPLATE STYLES */
+
+        /* Classic (Default) */
+        .resume-template-classic {
+            font-family: 'Crimson Pro', serif;
+            color: #000;
+            line-height: 1.5;
+        }
+
+        .resume-template-classic h1 {
+            border-bottom: 2px solid #000;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            font-size: 32px;
+        }
+
+        .resume-template-classic h2 {
+            text-transform: uppercase;
+            border-bottom: 1px solid #ccc;
+            margin-top: 24px;
+            margin-bottom: 12px;
+            font-size: 18px;
+            letter-spacing: 0.05em;
+        }
+
+        .resume-template-classic .resume-contact-info {
+            margin-bottom: 24px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+        }
+
+        .resume-template-classic h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .resume-template-classic p,
+        .resume-template-classic li {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+        }
+
+        /* Modern */
+        .resume-template-modern {
+            font-family: 'Inter', sans-serif;
+            color: #111;
+            line-height: 1.6;
+        }
+
+        .resume-template-modern h1 {
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+            border: none;
+        }
+
+        .resume-template-modern h2 {
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--color-accent);
+            border-bottom: 2px solid #eee;
+            padding-bottom: 6px;
+            margin-top: 28px;
+            margin-bottom: 16px;
+        }
+
+        .resume-template-modern .resume-contact-info {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 32px;
+            font-weight: 500;
+        }
+
+        .resume-template-modern h3 {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .resume-template-modern p,
+        .resume-template-modern li {
+            font-size: 14px;
+            color: #333;
+        }
+
+        /* Minimal */
+        .resume-template-minimal {
+            font-family: 'Inter', sans-serif;
+            color: #222;
+            line-height: 1.7;
+            text-align: center;
+        }
+
+        .resume-template-minimal h1 {
+            font-size: 28px;
+            font-weight: 400;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            border: none;
+        }
+
+        .resume-template-minimal .resume-contact-info {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #888;
+            margin-bottom: 40px;
+        }
+
+        .resume-template-minimal h2 {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-top: 32px;
+            margin-bottom: 16px;
+            border: none;
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Minimal Left Align Content Override */
+        .resume-template-minimal .section-content {
+            text-align: left;
+        }
+
+        .resume-template-minimal h3 {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .resume-template-minimal p,
+        .resume-template-minimal li {
+            font-size: 13px;
+            font-weight: 300;
+        }
+
         /* Clean Link in Nav */
         .nav-link {
             text-decoration: none;

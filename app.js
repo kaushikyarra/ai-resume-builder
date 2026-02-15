@@ -1,7 +1,8 @@
-// APP.JS - FINAL VERSION WITH AUTOSAVE AND SCORING
+// APP.JS - FINAL VERSION WITH AUTOSAVE, SCORING, TEMPLATES, AND GUIDANCE
 
 // STATE
 const state = {
+    template: 'classic', // classic, modern, minimal
     resume: {
         personal: {
             name: '',
@@ -45,19 +46,58 @@ const sampleData = {
 
 // PERSISTENCE
 function saveData() {
-    localStorage.setItem('resumeBuilderData', JSON.stringify(state.resume));
+    const data = {
+        resume: state.resume,
+        template: state.template
+    };
+    localStorage.setItem('resumeBuilderData', JSON.stringify(data));
     updateScoreUI();
 }
 
 function loadData() {
     const saved = localStorage.getItem('resumeBuilderData');
     if (saved) {
-        state.resume = JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Handle migration from old format where root was generic
+        if (parsed.resume) {
+            state.resume = parsed.resume;
+            state.template = parsed.template || 'classic';
+        } else {
+            // Fallback for previous version compat
+            state.resume = parsed;
+        }
+
         // Ensure arrays exist if loading from old data
         if (!state.resume.education) state.resume.education = [];
         if (!state.resume.experience) state.resume.experience = [];
         if (!state.resume.projects) state.resume.projects = [];
     }
+}
+
+// GUIDANCE LOGIC
+const ACTION_VERBS = [
+    'Built', 'Developed', 'Designed', 'Implemented', 'Led', 'Improved', 'Created', 'Optimized', 'Automated', 'Managed',
+    'Orchestrated', 'Spearheaded', 'Launched', 'Reduced', 'Increased', 'Saved', 'Generated', 'Delivered'
+];
+
+function getGuidance(text) {
+    if (!text || text.trim().length === 0) return null;
+
+    // Check Action Verb (First word)
+    const firstWord = text.trim().split(' ')[0];
+    const isActionVerb = ACTION_VERBS.some(v => v.toLowerCase() === firstWord.toLowerCase().replace(/[^a-z]/g, ''));
+
+    if (!isActionVerb) {
+        return { type: 'warning', message: 'Start with a strong action verb (e.g., Built, Led, Optimized).' };
+    }
+
+    // Check Numbers
+    const hasNumbers = /\d+|%/.test(text);
+    if (!hasNumbers) {
+        return { type: 'suggestion', message: 'Add measurable impact (numbers, %, $).' };
+    }
+
+    return null;
 }
 
 // ROUTER & RENDERING
@@ -174,7 +214,9 @@ function renderBuilder() {
                         <button class="btn btn-secondary btn-small" onclick="addExperience()">+ Add</button>
                     </div>
                     <div id="experience-list">
-                        ${state.resume.experience.map((exp, index) => `
+                        ${state.resume.experience.map((exp, index) => {
+        const guidance = getGuidance(exp.description);
+        return `
                             <div class="card" style="background: #f9f9f9; padding: 16px;">
                                 <div class="input-group">
                                     <label class="input-label">Company</label>
@@ -191,10 +233,11 @@ function renderBuilder() {
                                 <div class="input-group">
                                     <label class="input-label">Description</label>
                                     <textarea class="input" rows="3" oninput="updateArrayItem('experience', ${index}, 'description', this.value)">${exp.description}</textarea>
+                                    ${guidance ? `<div class="input-guidance ${guidance.type === 'warning' ? 'warning' : ''}">${guidance.message}</div>` : ''}
                                 </div>
                                 <button class="btn btn-secondary btn-small" onclick="removeArrayItem('experience', ${index})">Remove</button>
                             </div>
-                        `).join('')}
+                        `}).join('')}
                     </div>
 
                     <!-- Projects -->
@@ -203,7 +246,9 @@ function renderBuilder() {
                         <button class="btn btn-secondary btn-small" onclick="addProject()">+ Add</button>
                     </div>
                     <div id="projects-list">
-                         ${state.resume.projects.map((proj, index) => `
+                         ${state.resume.projects.map((proj, index) => {
+            const guidance = getGuidance(proj.description);
+            return `
                             <div class="card" style="background: #f9f9f9; padding: 16px;">
                                 <div class="input-group">
                                     <label class="input-label">Name</label>
@@ -216,10 +261,11 @@ function renderBuilder() {
                                 <div class="input-group">
                                     <label class="input-label">Description</label>
                                     <textarea class="input" rows="3" oninput="updateArrayItem('projects', ${index}, 'description', this.value)">${proj.description}</textarea>
+                                    ${guidance ? `<div class="input-guidance ${guidance.type === 'warning' ? 'warning' : ''}">${guidance.message}</div>` : ''}
                                 </div>
                                 <button class="btn btn-secondary btn-small" onclick="removeArrayItem('projects', ${index})">Remove</button>
                             </div>
-                        `).join('')}
+                        `}).join('')}
                     </div>
 
                     <!-- Skills -->
@@ -232,6 +278,13 @@ function renderBuilder() {
 
             <!-- RIGHT: PREVIEW -->
             <div class="builder-preview">
+                <!-- Template Switcher -->
+                <div class="template-switcher">
+                    <button class="template-btn ${state.template === 'classic' ? 'active' : ''}" onclick="setTemplate('classic')">Classic</button>
+                    <button class="template-btn ${state.template === 'modern' ? 'active' : ''}" onclick="setTemplate('modern')">Modern</button>
+                    <button class="template-btn ${state.template === 'minimal' ? 'active' : ''}" onclick="setTemplate('minimal')">Minimal</button>
+                </div>
+                
                 <div class="preview-container">
                     ${getResumeHTML()}
                 </div>
@@ -244,6 +297,11 @@ function renderBuilder() {
 function renderPreviewRoute() {
     app.innerHTML = `
         <div style="max-width: 800px; margin: 40px auto;">
+            <div class="template-switcher" style="margin-bottom: 40px;">
+                <button class="template-btn ${state.template === 'classic' ? 'active' : ''}" onclick="setTemplate('classic')">Classic</button>
+                <button class="template-btn ${state.template === 'modern' ? 'active' : ''}" onclick="setTemplate('modern')">Modern</button>
+                <button class="template-btn ${state.template === 'minimal' ? 'active' : ''}" onclick="setTemplate('minimal')">Minimal</button>
+            </div>
             ${getResumeHTML()}
             <div class="text-center mt-lg">
                 <button class="btn btn-primary" onclick="window.print()">Print / Save PDF</button>
@@ -275,7 +333,7 @@ function calculateScore() {
     if (summaryWords >= 40 && summaryWords <= 120) {
         score += 15;
     } else {
-        suggestions.push("Write a stronger summary (40–120 words).");
+        suggestions.push("Expand summary (40–120 words).");
     }
 
     // 2. Projects >= 2
@@ -313,7 +371,7 @@ function calculateScore() {
     if (hasNumbers) {
         score += 15;
     } else {
-        suggestions.push("Add measurable impact (numbers/%) in bullets.");
+        suggestions.push("Add measurable impact (%, x, k) in bullets.");
     }
 
     // 7. Education Completeness
@@ -324,7 +382,7 @@ function calculateScore() {
         suggestions.push("Add your education details.");
     }
 
-    // 8. Layout/Base (Implied +20 to reach 100, wait: 15+10+10+10+10+15+10 = 80. +20 Layout = 100)
+    // 8. Layout/Base
     score += 20;
 
     return { score: Math.min(score, 100), suggestions: suggestions.slice(0, 3) };
@@ -348,9 +406,12 @@ function updateScoreUI() {
             <div class="score-meter">
                 <div class="score-fill ${scoreClass}" style="width: ${score}%"></div>
             </div>
-            <ul class="suggestion-list">
-                ${suggestions.map(s => `<li class="suggestion-item">${s}</li>`).join('')}
-            </ul>
+            ${suggestions.length > 0 ? `
+                <div style="margin-bottom: 8px; font-weight: 600; font-size: 13px; color: #444;">Top Improvements</div>
+                <ul class="suggestion-list">
+                    ${suggestions.map(s => `<li class="suggestion-item">${s}</li>`).join('')}
+                </ul>
+            ` : ''}
         </div>
     `;
 }
@@ -361,61 +422,77 @@ function getResumeHTML() {
     const { personal, summary, education, experience, projects, skills } = state.resume;
 
     return `
-        <div class="resume-preview">
+        <div class="resume-preview resume-template-${state.template}">
             <h1>${personal.name || 'Your Name'}</h1>
             <div class="resume-contact-info">
                 ${[personal.location, personal.phone, personal.email, personal.github, personal.linkedin].filter(Boolean).join(' | ')}
             </div>
 
             ${summary ? `
-                <h2>Professional Summary</h2>
-                <p>${summary}</p>
+                <div class="section-content">
+                    <h2>Professional Summary</h2>
+                    <p>${summary}</p>
+                </div>
             ` : ''}
 
             ${skills ? `
-                <h2>Skills</h2>
-                <p>${skills}</p>
+                <div class="section-content">
+                    <h2>Skills</h2>
+                    <p>${skills}</p>
+                </div>
             ` : ''}
 
             ${experience.length > 0 ? `
-                <h2>Experience</h2>
-                ${experience.map(exp => `
-                    <div style="margin-bottom: 12px;">
-                        <div style="display: flex; justify-content: space-between; font-weight: 600;">
-                            <span>${exp.company} - ${exp.role}</span>
-                            <span>${exp.duration}</span>
+                <div class="section-content">
+                    <h2>Experience</h2>
+                    ${experience.map(exp => `
+                        <div style="margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; font-weight: 600; font-family: inherit;">
+                                <span>${exp.company} - ${exp.role}</span>
+                                <span>${exp.duration}</span>
+                            </div>
+                            <p>${exp.description}</p>
                         </div>
-                        <p>${exp.description}</p>
-                    </div>
-                `).join('')}
+                    `).join('')}
+                </div>
             ` : ''}
 
             ${projects.length > 0 ? `
-                <h2>Projects</h2>
-                ${projects.map(proj => `
-                    <div style="margin-bottom: 12px;">
-                         <div style="display: flex; justify-content: space-between; font-weight: 600;">
-                            <span>${proj.name}</span>
+                <div class="section-content">
+                    <h2>Projects</h2>
+                    ${projects.map(proj => `
+                        <div style="margin-bottom: 12px;">
+                             <div style="display: flex; justify-content: space-between; font-weight: 600; font-family: inherit;">
+                                <span>${proj.name}</span>
+                            </div>
+                            <p>${proj.description} ${proj.link ? `(${proj.link})` : ''}</p>
                         </div>
-                        <p>${proj.description} ${proj.link ? `(${proj.link})` : ''}</p>
-                    </div>
-                `).join('')}
+                    `).join('')}
+                </div>
             ` : ''}
 
             ${education.length > 0 ? `
-                <h2>Education</h2>
-                ${education.map(edu => `
-                    <div style="display: flex; justify-content: space-between;">
-                        <span><strong>${edu.institution}</strong>, ${edu.degree}</span>
-                        <span>${edu.year}</span>
-                    </div>
-                `).join('')}
+                <div class="section-content">
+                    <h2>Education</h2>
+                    ${education.map(edu => `
+                        <div style="display: flex; justify-content: space-between;">
+                            <span><strong>${edu.institution}</strong>, ${edu.degree}</span>
+                            <span>${edu.year}</span>
+                        </div>
+                    `).join('')}
+                </div>
             ` : ''}
         </div>
     `;
 }
 
 // ACTIONS
+window.setTemplate = function (templateName) {
+    state.template = templateName;
+    saveData();
+    render(); // Re-render to update UI state
+};
+
 window.loadSampleData = function () {
     state.resume = JSON.parse(JSON.stringify(sampleData));
     saveData();
@@ -468,7 +545,12 @@ window.removeArrayItem = function (key, index) {
 window.updateArrayItem = function (key, index, field, value) {
     state.resume[key][index][field] = value;
     saveData();
-    refreshPreview();
+    // Render whole list if we need to update guidance UI (textareas)
+    if (field === 'description') {
+        render();
+    } else {
+        refreshPreview();
+    }
 };
 
 function refreshPreview() {
