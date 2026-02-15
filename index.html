@@ -429,6 +429,139 @@
                 color: black;
             }
         }
+
+        /* NEW UI COMPONENTS */
+
+        /* Tag Input */
+        .tag-input-container {
+            border: 1px solid #ddd;
+            padding: 4px;
+            border-radius: 4px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            background: white;
+            min-height: 38px;
+        }
+
+        .tag-input-container:focus-within {
+            border-color: var(--color-accent);
+            outline: none;
+        }
+
+        .tag-chip {
+            background: #f0f0f0;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            user-select: none;
+        }
+
+        .tag-chip span {
+            cursor: pointer;
+            font-weight: bold;
+            color: #888;
+        }
+
+        .tag-chip span:hover {
+            color: #d00;
+        }
+
+        .tag-input {
+            border: none;
+            outline: none;
+            flex: 1;
+            min-width: 60px;
+            padding: 4px;
+            font-size: 14px;
+        }
+
+        /* Accordion */
+        details {
+            border: 1px solid #eee;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            background: white;
+            overflow: hidden;
+        }
+
+        summary {
+            padding: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fafafa;
+        }
+
+        summary:hover {
+            background: #f0f0f0;
+        }
+
+        details[open] summary {
+            border-bottom: 1px solid #eee;
+        }
+
+        .accordion-content {
+            padding: 16px;
+        }
+
+        /* Project Card */
+        .preview-project-card {
+            margin-bottom: 16px;
+            break-inside: avoid;
+        }
+
+        .preview-project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 4px;
+        }
+
+        .preview-project-title {
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .preview-project-links a {
+            font-size: 12px;
+            color: var(--color-accent);
+            margin-left: 8px;
+            text-decoration: none;
+        }
+
+        .preview-project-links a:hover {
+            text-decoration: underline;
+        }
+
+        .preview-tech-stack {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+
+        .tech-badge {
+            font-size: 11px;
+            border: 1px solid #ccc;
+            padding: 1px 6px;
+            border-radius: 10px;
+            color: #555;
+        }
+
+        /* Print overrides for badges */
+        @media print {
+            .tech-badge {
+                border-color: #000;
+                color: #000;
+            }
+        }
     </style>
 </head>
 
