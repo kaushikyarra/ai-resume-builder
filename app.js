@@ -230,7 +230,188 @@ function renderPreviewRoute() {
         </div>
     `;
 }
-function renderProof() { app.innerHTML = `<div class="card" style="max-width: 600px; margin: 40px auto;"><h2 class="card__title">Proof of Work</h2><p>This is where the final artifact submission would go.</p><div class="empty-state"><div class="empty-state__title">Waiting for Completion</div></div></div>`; }
+// SUBMISSION STATE
+const submissionState = {
+    lovableLink: '',
+    githubLink: '',
+    deployedLink: '',
+    steps: [
+        { id: 'step1', label: 'Project Setup & Structure', checked: false },
+        { id: 'step2', label: 'Basic Resume Form (HTML/CSS)', checked: false },
+        { id: 'step3', label: 'Live Preview Implementation', checked: false },
+        { id: 'step4', label: 'PDF Export Logic', checked: false },
+        { id: 'step5', label: 'Persistence (LocalStorage)', checked: false },
+        { id: 'step6', label: 'ATS Scoring Algorithm', checked: false },
+        { id: 'step7', label: 'Visual Customization (Themes)', checked: false },
+        { id: 'step8', label: 'Final Polish & Verification', checked: false }
+    ],
+    checklist: [
+        { id: 'check1', label: 'All form sections save to localStorage', checked: false },
+        { id: 'check2', label: 'Live preview updates in real-time', checked: false },
+        { id: 'check3', label: 'Template switching preserves data', checked: false },
+        { id: 'check4', label: 'Color theme persists after refresh', checked: false },
+        { id: 'check5', label: 'ATS score calculates correctly', checked: false },
+        { id: 'check6', label: 'Score updates live on edit', checked: false },
+        { id: 'check7', label: 'Export buttons work (copy/download)', checked: false },
+        { id: 'check8', label: 'Empty states handled gracefully', checked: false },
+        { id: 'check9', label: 'Mobile responsive layout works', checked: false },
+        { id: 'check10', label: 'No console errors on any page', checked: false }
+    ]
+};
+
+// LOAD SUBMISSION DATA
+function loadSubmissionData() {
+    const saved = localStorage.getItem('rb_final_submission');
+    if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.lovableLink) submissionState.lovableLink = parsed.lovableLink;
+        if (parsed.githubLink) submissionState.githubLink = parsed.githubLink;
+        if (parsed.deployedLink) submissionState.deployedLink = parsed.deployedLink;
+
+        // Restore checks if IDs match
+        if (parsed.steps) {
+            parsed.steps.forEach(s => {
+                const existing = submissionState.steps.find(e => e.id === s.id);
+                if (existing) existing.checked = s.checked;
+            });
+        }
+        if (parsed.checklist) {
+            parsed.checklist.forEach(c => {
+                const existing = submissionState.checklist.find(e => e.id === c.id);
+                if (existing) existing.checked = c.checked;
+            });
+        }
+    }
+}
+
+function saveSubmissionData() {
+    localStorage.setItem('rb_final_submission', JSON.stringify(submissionState));
+    renderProof(); // Re-render to update status
+}
+
+function isShipped() {
+    const allSteps = submissionState.steps.every(s => s.checked);
+    const allChecks = submissionState.checklist.every(c => c.checked);
+    const linksInfo = submissionState.lovableLink && submissionState.githubLink && submissionState.deployedLink;
+    return allSteps && allChecks && linksInfo;
+}
+
+// RENDER PROOF
+function renderProof() {
+    const shipped = isShipped();
+
+    app.innerHTML = `
+        <div style="max-width: 800px; margin: 40px auto; padding-bottom: 80px;">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid #eee; padding-bottom: 16px;">
+                    <div>
+                        <h2 class="card__title" style="margin: 0;">Proof of Work</h2>
+                        <p style="margin: 4px 0 0; color: #666; font-size: 14px;">Final verification for Project 3.</p>
+                    </div>
+                    <div class="status-badge ${shipped ? 'shipped' : 'in-progress'}">
+                        ${shipped ? '✓ Shipped' : 'In Progress'}
+                    </div>
+                </div>
+
+                <!-- 1. Dev Steps -->
+                <h3 style="margin-bottom: 16px; font-size: 16px;">A) Development Steps</h3>
+                <div class="checklist-grid">
+                    ${submissionState.steps.map((step, i) => `
+                        <label class="checklist-item">
+                            <input type="checkbox" onchange="toggleSubmissionCheck('steps', '${step.id}')" ${step.checked ? 'checked' : ''}>
+                            <span>${i + 1}. ${step.label}</span>
+                        </label>
+                    `).join('')}
+                </div>
+
+                <!-- 2. Test Checklist -->
+                <h3 style="margin: 32px 0 16px; font-size: 16px;">B) Verification Checklist (Required)</h3>
+                <div class="checklist-grid">
+                    ${submissionState.checklist.map(item => `
+                        <label class="checklist-item">
+                            <input type="checkbox" onchange="toggleSubmissionCheck('checklist', '${item.id}')" ${item.checked ? 'checked' : ''}>
+                            <span>${item.label}</span>
+                        </label>
+                    `).join('')}
+                </div>
+
+                <!-- 3. Artifacts -->
+                <h3 style="margin: 32px 0 16px; font-size: 16px;">C) Artifact Collection (Required)</h3>
+                <div class="input-group">
+                    <label class="input-label">Lovable Project Link</label>
+                    <input type="text" class="input" placeholder="https://..." value="${submissionState.lovableLink}" oninput="updateSubmissionLink('lovableLink', this.value)">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">GitHub Repository Link</label>
+                    <input type="text" class="input" placeholder="https://..." value="${submissionState.githubLink}" oninput="updateSubmissionLink('githubLink', this.value)">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Deployed URL</label>
+                    <input type="text" class="input" placeholder="https://..." value="${submissionState.deployedLink}" oninput="updateSubmissionLink('deployedLink', this.value)">
+                </div>
+
+                <!-- 4. Export -->
+                <div style="margin-top: 40px; text-align: right; padding-top: 24px; border-top: 1px solid #eee;">
+                    ${shipped ?
+            `<div style="margin-bottom: 16px; color: var(--color-success); font-weight: 600;">Project 3 Shipped Successfully.</div>`
+            : `<div style="margin-bottom: 16px; color: #666; font-size: 13px;">Complete all items to ship.</div>`
+        }
+                    <button class="btn btn-primary" onclick="copySubmission()" ${!shipped ? 'style="opacity: 0.5; cursor: not-allowed;"' : ''}>
+                        Copy Final Submission
+                    </button>
+                    <div id="copy-message" style="margin-top: 8px; font-size: 12px; color: var(--color-success); opacity: 0; transition: opacity 0.3s;">Copied to clipboard!</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// SUBMISSION HANDLERS
+window.toggleSubmissionCheck = function (type, id) {
+    const item = submissionState[type].find(i => i.id === id);
+    if (item) {
+        item.checked = !item.checked;
+        saveSubmissionData();
+    }
+};
+
+window.updateSubmissionLink = function (key, value) {
+    submissionState[key] = value;
+    saveSubmissionData();
+};
+
+window.copySubmission = function () {
+    if (!isShipped()) {
+        alert("Please complete all steps, checklist items, and links before submitting.");
+        return;
+    }
+
+    const text = `
+------------------------------------------
+AI Resume Builder — Final Submission
+
+Lovable Project: ${submissionState.lovableLink}
+GitHub Repository: ${submissionState.githubLink}
+Live Deployment: ${submissionState.deployedLink}
+
+Core Capabilities:
+- Structured resume builder
+- Deterministic ATS scoring
+- Template switching
+- PDF export with clean formatting
+- Persistence + validation checklist
+------------------------------------------
+`.trim();
+
+    navigator.clipboard.writeText(text).then(() => {
+        const msg = document.getElementById('copy-message');
+        if (msg) msg.style.opacity = 1;
+        setTimeout(() => { if (msg) msg.style.opacity = 0; }, 3000);
+    });
+};
+
+loadSubmissionData();
+
 
 // RESUME HTML GENERATOR
 function getResumeHTML() {
