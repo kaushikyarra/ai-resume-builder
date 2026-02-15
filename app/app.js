@@ -46,12 +46,12 @@ const app = document.getElementById('app-content');
 
 function render() {
     const route = window.location.hash || '#/';
-    
+
     // Update Nav
     document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-    if (route.includes('builder')) document.getElementById('nav-builder').classList.add('active');
-    else if (route.includes('preview')) document.getElementById('nav-preview').classList.add('active');
-    else if (route.includes('proof')) document.getElementById('nav-proof').classList.add('active');
+    if (route.includes('builder')) document.getElementById('nav-builder')?.classList.add('active');
+    else if (route.includes('preview')) document.getElementById('nav-preview')?.classList.add('active');
+    else if (route.includes('proof')) document.getElementById('nav-proof')?.classList.add('active');
 
     if (route === '#/') {
         renderHome();
@@ -121,21 +121,82 @@ function renderBuilder() {
                     </div>
 
                     <!-- Education -->
-                    <h3 class="mt-md mb-sm">Education</h3>
-                    <div class="input-group">
-                         <p class="text-small text-muted">Education editing not implemented in skeleton.</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; margin-bottom: 16px;">
+                        <h3 style="margin: 0;">Education</h3>
+                        <button class="btn btn-secondary btn-small" onclick="addEducation()">+ Add</button>
+                    </div>
+                    <div id="education-list">
+                        ${state.resume.education.map((edu, index) => `
+                            <div class="card" style="background: #f9f9f9; padding: 16px;">
+                                <div class="input-group">
+                                    <label class="input-label">Institution</label>
+                                    <input type="text" class="input" value="${edu.institution}" oninput="updateArrayItem('education', ${index}, 'institution', this.value)">
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">Degree</label>
+                                    <input type="text" class="input" value="${edu.degree}" oninput="updateArrayItem('education', ${index}, 'degree', this.value)">
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">Year</label>
+                                    <input type="text" class="input" value="${edu.year}" oninput="updateArrayItem('education', ${index}, 'year', this.value)">
+                                </div>
+                                <button class="btn btn-secondary btn-small" onclick="removeArrayItem('education', ${index})">Remove</button>
+                            </div>
+                        `).join('')}
                     </div>
 
                     <!-- Experience -->
-                    <h3 class="mt-md mb-sm">Experience</h3>
-                     <div class="input-group">
-                         <p class="text-small text-muted">Experience editing not implemented in skeleton.</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; margin-bottom: 16px;">
+                        <h3 style="margin: 0;">Experience</h3>
+                        <button class="btn btn-secondary btn-small" onclick="addExperience()">+ Add</button>
+                    </div>
+                    <div id="experience-list">
+                        ${state.resume.experience.map((exp, index) => `
+                            <div class="card" style="background: #f9f9f9; padding: 16px;">
+                                <div class="input-group">
+                                    <label class="input-label">Company</label>
+                                    <input type="text" class="input" value="${exp.company}" oninput="updateArrayItem('experience', ${index}, 'company', this.value)">
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">Role</label>
+                                    <input type="text" class="input" value="${exp.role}" oninput="updateArrayItem('experience', ${index}, 'role', this.value)">
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">Duration</label>
+                                    <input type="text" class="input" value="${exp.duration}" oninput="updateArrayItem('experience', ${index}, 'duration', this.value)">
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">Description</label>
+                                    <textarea class="input" rows="3" oninput="updateArrayItem('experience', ${index}, 'description', this.value)">${exp.description}</textarea>
+                                </div>
+                                <button class="btn btn-secondary btn-small" onclick="removeArrayItem('experience', ${index})">Remove</button>
+                            </div>
+                        `).join('')}
                     </div>
 
                     <!-- Projects -->
-                    <h3 class="mt-md mb-sm">Projects</h3>
-                     <div class="input-group">
-                         <p class="text-small text-muted">Projects editing not implemented in skeleton.</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; margin-bottom: 16px;">
+                        <h3 style="margin: 0;">Projects</h3>
+                        <button class="btn btn-secondary btn-small" onclick="addProject()">+ Add</button>
+                    </div>
+                    <div id="projects-list">
+                         ${state.resume.projects.map((proj, index) => `
+                            <div class="card" style="background: #f9f9f9; padding: 16px;">
+                                <div class="input-group">
+                                    <label class="input-label">Name</label>
+                                    <input type="text" class="input" value="${proj.name}" oninput="updateArrayItem('projects', ${index}, 'name', this.value)">
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">Link</label>
+                                    <input type="text" class="input" value="${proj.link}" oninput="updateArrayItem('projects', ${index}, 'link', this.value)">
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">Description</label>
+                                    <textarea class="input" rows="3" oninput="updateArrayItem('projects', ${index}, 'description', this.value)">${proj.description}</textarea>
+                                </div>
+                                <button class="btn btn-secondary btn-small" onclick="removeArrayItem('projects', ${index})">Remove</button>
+                            </div>
+                        `).join('')}
                     </div>
 
                     <!-- Skills -->
@@ -182,7 +243,7 @@ function renderProof() {
 // HELPERS
 function getResumeHTML() {
     const { personal, summary, education, experience, projects, skills } = state.resume;
-    
+
     return `
         <div class="resume-preview">
             <h1>${personal.name || 'Your Name'}</h1>
@@ -239,35 +300,58 @@ function getResumeHTML() {
 }
 
 // ACTIONS
-window.loadSampleData = function() {
+window.loadSampleData = function () {
     state.resume = JSON.parse(JSON.stringify(sampleData));
     render();
 };
 
-window.updatePersonal = function(field, value) {
+window.updatePersonal = function (field, value) {
     state.resume.personal[field] = value;
-    // Re-render only preview would be better, but full re-render is fine for skeleton
-    const previewContainer = document.querySelector('.preview-container');
-    if (previewContainer) {
-        previewContainer.innerHTML = getResumeHTML();
-    }
+    refreshPreview();
 };
 
-window.updateSummary = function(value) {
+window.updateSummary = function (value) {
     state.resume.summary = value;
-    const previewContainer = document.querySelector('.preview-container');
-    if (previewContainer) {
-        previewContainer.innerHTML = getResumeHTML();
-    }
+    refreshPreview();
 };
 
-window.updateSkills = function(value) {
+window.updateSkills = function (value) {
     state.resume.skills = value;
+    refreshPreview();
+};
+
+// ARRAY ACTIONS
+window.addEducation = function () {
+    state.resume.education.push({ institution: '', degree: '', year: '' });
+    render(); // Re-render form to show new input
+};
+
+window.addExperience = function () {
+    state.resume.experience.push({ company: '', role: '', duration: '', description: '' });
+    render();
+};
+
+window.addProject = function () {
+    state.resume.projects.push({ name: '', link: '', description: '' });
+    render();
+};
+
+window.removeArrayItem = function (key, index) {
+    state.resume[key].splice(index, 1);
+    render();
+};
+
+window.updateArrayItem = function (key, index, field, value) {
+    state.resume[key][index][field] = value;
+    refreshPreview();
+};
+
+function refreshPreview() {
     const previewContainer = document.querySelector('.preview-container');
     if (previewContainer) {
         previewContainer.innerHTML = getResumeHTML();
     }
-};
+}
 
 // INIT
 window.addEventListener('hashchange', render);
